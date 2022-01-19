@@ -3,6 +3,7 @@ package mongodriver
 import (
 	"context"
 
+	"github.com/hirokisan/mgo-to-mongo-go-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -13,7 +14,10 @@ type Database struct {
 }
 
 func NewDatabase(ctx context.Context, url, db string) *Database {
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
+	client, err := mongo.Connect(
+		ctx,
+		options.Client().ApplyURI(url).SetRegistry(bson.CustomRegistry().Build()),
+	)
 	if err != nil {
 		panic(err)
 	}

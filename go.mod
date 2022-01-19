@@ -3,7 +3,7 @@ module github.com/hirokisan/mgo-to-mongo-go-driver
 go 1.17
 
 require (
-	github.com/hirokisan/mgo v1.0.1-0.20220119053635-9c7e255a3673
+	github.com/hirokisan/mgo v1.0.1-0.20220119135617-781fd40fb5fe
 	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.8.2
 )
