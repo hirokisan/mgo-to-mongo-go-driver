@@ -1,7 +1,7 @@
 package mgo
 
 import (
-	"gopkg.in/mgo.v2"
+	"github.com/hirokisan/mgo"
 )
 
 type Session struct {

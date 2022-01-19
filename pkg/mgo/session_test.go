@@ -3,11 +3,12 @@ package mgo_test
 import (
 	"testing"
 
+	"github.com/hirokisan/mgo/bson"
+
 	"github.com/hirokisan/mgo-to-mongo-go-driver/model"
 	"github.com/hirokisan/mgo-to-mongo-go-driver/pkg/mgo/mgotest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func TestInsert(t *testing.T) {
