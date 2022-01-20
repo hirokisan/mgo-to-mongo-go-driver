@@ -80,10 +80,6 @@ func (id *ObjectID) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 		*id = *got.Data
 		return nil
 	}
-	// TODO : 0c00000000 may be given, so it is removed.
-	if len(data) == 17 {
-		data = data[5:]
-	}
 	hex := hex.EncodeToString(data)
 	if !primitive.IsValidObjectID(hex) {
 		return fmt.Errorf("invalid object id: %s", hex)
