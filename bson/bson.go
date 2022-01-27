@@ -23,11 +23,17 @@ type RegEx = primitive.Regex
 type DateTime = primitive.DateTime
 
 // ObjectID :
-type ObjectID primitive.ObjectID
+type ObjectID string
 
 // NewObjectID :
 func NewObjectID() ObjectID {
-	return ObjectID(primitive.NewObjectID())
+	id := primitive.NewObjectID()
+	return ObjectID(id[:])
+}
+
+// PtrObjectID :
+func PtrObjectID(src ObjectID) *ObjectID {
+	return &src
 }
 
 // ObjectIDHex :
@@ -36,7 +42,7 @@ func ObjectIDHex(s string) ObjectID {
 	if err != nil {
 		panic(fmt.Errorf("invalid input to ObjectIdHex: %q :%w", s, err))
 	}
-	return ObjectID(pid)
+	return ObjectID(pid.Hex())
 }
 
 // IsObjectIDHex :
@@ -88,13 +94,13 @@ func (id *ObjectID) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	if err != nil {
 		return fmt.Errorf("invalid object id: %s", hex)
 	}
-	*id = ObjectID(tmp)
+	*id = ObjectID(tmp[:])
 	return nil
 }
 
 // Hex :
 func (id ObjectID) Hex() string {
-	return hex.EncodeToString(id[:])
+	return hex.EncodeToString([]byte(id))
 }
 
 // GetBSON(mgo) : write
@@ -120,6 +126,6 @@ func (id *ObjectID) SetBSON(raw mgobson.Raw) error {
 	if err != nil {
 		return fmt.Errorf("from hex: %s", hex)
 	}
-	*id = ObjectID(tmp)
+	*id = ObjectID(tmp[:])
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 // CustomRegistry :
 func CustomRegistry() *bsoncodec.RegistryBuilder {
 	customValues := []interface{}{
-		&ObjectID{},
+		PtrObjectID(ObjectID("")),
 	}
 	rb := bson.NewRegistryBuilder()
 	for _, v := range customValues {
