@@ -21,7 +21,7 @@ type target struct {
 	InsertFrom string         `bson:"insertFrom"`
 }
 
-func TestOne(t *testing.T) {
+func TestObjectID(t *testing.T) {
 	ctx := context.Background()
 
 	db := mongodrivertest.NewTestDatabase(ctx)
@@ -32,11 +32,11 @@ func TestOne(t *testing.T) {
 	mgoCollection := session.Collection(testCollectionName)
 
 	t.Run("insert from mgo", func(t *testing.T) {
-		primitiveID := bson.NewObjectID()
+		objectID := bson.NewObjectID()
 
 		m := target{
-			ID:         primitiveID,
-			PID:        &primitiveID,
+			ID:         objectID,
+			PID:        &objectID,
 			InsertFrom: "mgo",
 		}
 		assert.NoError(t, mgoCollection.Insert(m))
@@ -44,26 +44,26 @@ func TestOne(t *testing.T) {
 		t.Run("find from mgo", func(t *testing.T) {
 			var got target
 			require.NoError(t, mgoCollection.FindId(m.ID).One(&got))
-			assert.Equal(t, primitiveID, got.ID)
-			assert.Equal(t, primitiveID, *got.PID)
+			assert.Equal(t, objectID, got.ID)
+			assert.Equal(t, objectID, *got.PID)
 			assert.Nil(t, got.NullPID)
 			assert.Nil(t, got.OmitPID)
 		})
 		t.Run("find from mongodriver", func(t *testing.T) {
 			var got target
-			require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": primitiveID}).Decode(&got))
-			assert.Equal(t, primitiveID, got.ID)
-			assert.Equal(t, primitiveID, got.ID)
-			assert.Equal(t, primitiveID, *got.PID)
+			require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&got))
+			assert.Equal(t, objectID, got.ID)
+			assert.Equal(t, objectID, got.ID)
+			assert.Equal(t, objectID, *got.PID)
 			assert.Nil(t, got.NullPID)
 			assert.Nil(t, got.OmitPID)
 		})
 	})
 	t.Run("insert from mongodriver", func(t *testing.T) {
-		primitiveID := bson.NewObjectID()
+		objectID := bson.NewObjectID()
 		m := target{
-			ID:         primitiveID,
-			PID:        &primitiveID,
+			ID:         objectID,
+			PID:        &objectID,
 			InsertFrom: "mongo-go-driver",
 		}
 		_, err := mdCollection.InsertOne(ctx, m)
@@ -71,17 +71,17 @@ func TestOne(t *testing.T) {
 
 		t.Run("find from mgo", func(t *testing.T) {
 			var got target
-			require.NoError(t, mgoCollection.FindId(primitiveID).One(&got))
-			assert.Equal(t, primitiveID, got.ID)
-			assert.Equal(t, primitiveID, *got.PID)
+			require.NoError(t, mgoCollection.FindId(objectID).One(&got))
+			assert.Equal(t, objectID, got.ID)
+			assert.Equal(t, objectID, *got.PID)
 			assert.Nil(t, got.NullPID)
 			assert.Nil(t, got.OmitPID)
 		})
 		t.Run("find from mongodriver", func(t *testing.T) {
 			var got target
-			assert.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": primitiveID}).Decode(&got))
-			assert.Equal(t, primitiveID, got.ID)
-			assert.Equal(t, primitiveID, *got.PID)
+			assert.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&got))
+			assert.Equal(t, objectID, got.ID)
+			assert.Equal(t, objectID, *got.PID)
 			assert.Nil(t, got.NullPID)
 			assert.Nil(t, got.OmitPID)
 		})
