@@ -54,7 +54,6 @@ func TestObjectID(t *testing.T) {
 			var got target
 			require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&got))
 			assert.Equal(t, objectID, got.ID)
-			assert.Equal(t, objectID, got.ID)
 			assert.Equal(t, objectID, *got.PID)
 			assert.Nil(t, got.NullPID)
 			assert.Nil(t, got.OmitPID)
