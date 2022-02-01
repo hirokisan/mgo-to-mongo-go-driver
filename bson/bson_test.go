@@ -215,3 +215,26 @@ func TestNewObjectID(t *testing.T) {
 		assert.True(t, primitive.IsValidObjectID(want.ID.Hex()))
 	})
 }
+
+func TestIsObjectIDHex(t *testing.T) {
+	ctx := context.Background()
+
+	db := mongodrivertest.NewTestDatabase(ctx)
+	mdCollection := db.Collection(testCollectionName)
+
+	type target struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+	tgt := target{
+		ID: primitive.NewObjectID(),
+	}
+	_, err := mdCollection.InsertOne(ctx, tgt)
+	require.NoError(t, err)
+	{
+		var want struct {
+			ID bson.ObjectID `bson:"_id"`
+		}
+		require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": bson.ObjectIDHex(tgt.ID.Hex())}).Decode(&want))
+		assert.True(t, bson.IsObjectIDHex(want.ID.Hex()))
+	}
+}
