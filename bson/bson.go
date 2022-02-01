@@ -42,7 +42,7 @@ func ObjectIDHex(s string) ObjectID {
 	if err != nil {
 		panic(fmt.Errorf("invalid input to ObjectIdHex: %q :%w", s, err))
 	}
-	return ObjectID(pid.Hex())
+	return ObjectID(pid[:])
 }
 
 // IsObjectIDHex :
@@ -52,7 +52,7 @@ func IsObjectIDHex(s string) bool {
 
 // Unmarshal :
 func Unmarshal(data []byte, val interface{}) error {
-	return bson.Unmarshal(data, val)
+	return bson.UnmarshalWithRegistry(CustomRegistry().Build(), data, val)
 }
 
 // Marshal :

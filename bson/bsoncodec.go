@@ -8,12 +8,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CustomRegistry :
 func CustomRegistry() *bsoncodec.RegistryBuilder {
 	customValues := []interface{}{
 		PtrObjectID(ObjectID("")),
+		M{},
 	}
 	rb := bson.NewRegistryBuilder()
 	for _, v := range customValues {
@@ -22,21 +24,42 @@ func CustomRegistry() *bsoncodec.RegistryBuilder {
 		if err != nil {
 			panic(err)
 		}
-		rb.RegisterTypeDecoder(t, &nullawareDecoder{
+		rb.RegisterTypeDecoder(t, &customDecoder{
 			defDecoder: defDecoder,
 			zeroValue:  reflect.Zero(t)})
 	}
 	return rb
 }
 
-// nullawareDecoder : ObjectIDのnullをnilとして扱うためのdecoder
-type nullawareDecoder struct {
+// customDecoder :
+type customDecoder struct {
 	defDecoder bsoncodec.ValueDecoder
 	zeroValue  reflect.Value
 }
 
 // DecodeValue :
-func (d *nullawareDecoder) DecodeValue(dctx bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
+func (d *customDecoder) DecodeValue(dctx bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
+	if val.Type() == reflect.TypeOf(primitive.M{}) {
+		if err := bsoncodec.NewMapCodec().DecodeValue(dctx, vr, val); err != nil {
+			return err
+		}
+		for _, key := range val.MapKeys() {
+			if val.MapIndex(key).IsNil() {
+				continue
+			}
+			if reflect.ValueOf(val.MapIndex(key).Interface()).Type() != reflect.TypeOf(primitive.ObjectID{}) {
+				continue
+			}
+			rawID, ok := val.MapIndex(key).Interface().(primitive.ObjectID)
+			if !ok {
+				continue
+			}
+			id := ObjectIDHex(rawID.Hex())
+			val.SetMapIndex(key, reflect.ValueOf(&id).Elem())
+		}
+		return nil
+	}
+
 	if vr.Type() != bsontype.Null {
 		return d.defDecoder.DecodeValue(dctx, vr, val)
 	}
