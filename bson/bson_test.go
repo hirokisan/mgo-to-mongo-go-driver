@@ -12,6 +12,7 @@ import (
 	mgobson "github.com/hirokisan/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const testCollectionName = "test"
@@ -176,5 +177,41 @@ func TestObjectIDHex(t *testing.T) {
 		require.Equal(t, reflect.TypeOf(bson.ObjectID("")), reflect.TypeOf(want))
 		require.Equal(t, reflect.TypeOf(mgobson.ObjectId("")), reflect.TypeOf(got))
 		assert.Equal(t, want.Hex(), got.Hex())
+	})
+}
+
+func TestNewObjectID(t *testing.T) {
+	ctx := context.Background()
+
+	db := mongodrivertest.NewTestDatabase(ctx)
+	mdCollection := db.Collection(testCollectionName)
+
+	session := mgotest.NewTestSession()
+	defer session.Close()
+	mgoCollection := session.Collection(testCollectionName)
+
+	type target struct {
+		ID bson.ObjectID `bson:"_id"`
+	}
+	tgt := target{
+		ID: bson.NewObjectID(),
+	}
+	_, err := mdCollection.InsertOne(ctx, tgt)
+	require.NoError(t, err)
+	t.Run("find from mgo, check it as ObjectID", func(t *testing.T) {
+		var want struct {
+			ID mgobson.ObjectId `bson:"_id"`
+		}
+		require.NoError(t, mgoCollection.FindId(tgt.ID).One(&want))
+		assert.Equal(t, tgt.ID.Hex(), want.ID.Hex())
+		assert.True(t, mgobson.IsObjectIdHex(want.ID.Hex()))
+	})
+	t.Run("find from mongo-go-driver, check it as ObjectID", func(t *testing.T) {
+		var want struct {
+			ID primitive.ObjectID `bson:"_id"`
+		}
+		require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": tgt.ID}).Decode(&want))
+		assert.Equal(t, tgt.ID.Hex(), want.ID.Hex())
+		assert.True(t, primitive.IsValidObjectID(want.ID.Hex()))
 	})
 }
