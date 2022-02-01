@@ -303,3 +303,44 @@ func TestUnmarshal(t *testing.T) {
 		})
 	})
 }
+
+func TestMarshal(t *testing.T) {
+	t.Run("from struct to []byte", func(t *testing.T) {
+		objectID := bson.NewObjectID()
+		tgt := target{
+			ID:  objectID,
+			PID: &objectID,
+		}
+		want, err := bson.Marshal(tgt)
+		require.NoError(t, err)
+		t.Run("compare with mgobson", func(t *testing.T) {
+			got, err := mgobson.Marshal(tgt)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+		})
+		t.Run("compare with primitive", func(t *testing.T) {
+			got, err := driverbson.Marshal(tgt)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+		})
+	})
+	t.Run("from bson.M to []byte", func(t *testing.T) {
+		objectID := bson.NewObjectID()
+		// NOTE: bson.M do not care about the order, so set only one
+		m := bson.M{
+			"_id": objectID,
+		}
+		want, err := bson.Marshal(m)
+		require.NoError(t, err)
+		t.Run("compare with mgobson", func(t *testing.T) {
+			got, err := mgobson.Marshal(m)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+		})
+		t.Run("compare with primitive", func(t *testing.T) {
+			got, err := driverbson.Marshal(m)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+		})
+	})
+}
