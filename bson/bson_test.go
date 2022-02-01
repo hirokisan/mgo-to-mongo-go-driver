@@ -12,6 +12,7 @@ import (
 	mgobson "github.com/hirokisan/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	driverbson "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -237,4 +238,68 @@ func TestIsObjectIDHex(t *testing.T) {
 		require.NoError(t, mdCollection.FindOne(ctx, bson.M{"_id": bson.ObjectIDHex(tgt.ID.Hex())}).Decode(&want))
 		assert.True(t, bson.IsObjectIDHex(want.ID.Hex()))
 	}
+}
+
+func TestUnmarshal(t *testing.T) {
+	t.Run("from []byte to struct", func(t *testing.T) {
+		objectID := bson.NewObjectID()
+		tgt := target{
+			ID:  objectID,
+			PID: &objectID,
+		}
+		buf, err := bson.Marshal(tgt)
+		require.NoError(t, err)
+		var want target
+		require.NoError(t, bson.Unmarshal(buf, &want))
+		require.Equal(t, tgt.ID, want.ID)
+		t.Run("compare with mgobson", func(t *testing.T) {
+			buf, err := mgobson.Marshal(tgt)
+			require.NoError(t, err)
+			var got target
+			require.NoError(t, mgobson.Unmarshal(buf, &got))
+			assert.Equal(t, want.ID, got.ID)
+			assert.Equal(t, want.PID, got.PID)
+		})
+		t.Run("compare with primitive", func(t *testing.T) {
+			buf, err := driverbson.Marshal(tgt)
+			require.NoError(t, err)
+			var got target
+			require.NoError(t, driverbson.Unmarshal(buf, &got))
+			assert.Equal(t, want.ID, got.ID)
+			assert.Equal(t, want.PID, got.PID)
+		})
+	})
+	t.Run("from []byte to bson.M", func(t *testing.T) {
+		objectID := bson.NewObjectID()
+		tgt := target{
+			ID:  objectID,
+			PID: &objectID,
+		}
+		buf, err := bson.Marshal(tgt)
+		require.NoError(t, err)
+		var want bson.M
+		require.NoError(t, bson.Unmarshal(buf, &want))
+		require.Equal(t, tgt.ID, want["_id"])
+		require.Equal(t, *tgt.PID, want["pid"])
+		t.Run("compare with mgobson, different types but matching values", func(t *testing.T) {
+			buf, err := mgobson.Marshal(tgt)
+			require.NoError(t, err)
+			var got bson.M
+			require.NoError(t, mgobson.Unmarshal(buf, &got))
+			assert.NotEqual(t, want["_id"], got["_id"])
+			assert.Equal(t, want["_id"].(bson.ObjectID).Hex(), got["_id"].(mgobson.ObjectId).Hex())
+			assert.NotEqual(t, want["pid"], got["pid"])
+			assert.Equal(t, want["pid"].(bson.ObjectID).Hex(), got["pid"].(mgobson.ObjectId).Hex())
+		})
+		t.Run("compare with primitive, different types but matching values", func(t *testing.T) {
+			buf, err := driverbson.Marshal(tgt)
+			require.NoError(t, err)
+			var got bson.M
+			require.NoError(t, driverbson.Unmarshal(buf, &got))
+			assert.NotEqual(t, want["_id"], got["_id"])
+			assert.Equal(t, want["_id"].(bson.ObjectID).Hex(), got["_id"].(primitive.ObjectID).Hex())
+			assert.NotEqual(t, want["pid"], got["pid"])
+			assert.Equal(t, want["pid"].(bson.ObjectID).Hex(), got["pid"].(primitive.ObjectID).Hex())
+		})
+	})
 }
