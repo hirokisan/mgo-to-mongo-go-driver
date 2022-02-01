@@ -2,12 +2,14 @@ package bson_test
 
 import (
 	"context"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/hirokisan/mgo-to-mongo-go-driver/bson"
 	"github.com/hirokisan/mgo-to-mongo-go-driver/pkg/mgo/mgotest"
 	"github.com/hirokisan/mgo-to-mongo-go-driver/pkg/mongodriver/mongodrivertest"
+	mgobson "github.com/hirokisan/mgo/bson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -161,5 +163,18 @@ func TestM(t *testing.T) {
 			assert.Equal(t, objectID, got.ID)
 			assert.Equal(t, objectID, *got.PID)
 		})
+	})
+}
+
+func TestObjectIDHex(t *testing.T) {
+	idString := "61e77d72f768730001eacbe2"
+
+	want := bson.ObjectIDHex(idString)
+
+	t.Run("compare with mgobson, value is the same", func(t *testing.T) {
+		got := mgobson.ObjectIdHex(idString)
+		require.Equal(t, reflect.TypeOf(bson.ObjectID("")), reflect.TypeOf(want))
+		require.Equal(t, reflect.TypeOf(mgobson.ObjectId("")), reflect.TypeOf(got))
+		assert.Equal(t, want.Hex(), got.Hex())
 	})
 }
